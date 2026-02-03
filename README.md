@@ -250,6 +250,16 @@ Free to use and modify!
 - The dashboard config is saved in `pis_config.json`
 - Agent logs: `sudo journalctl -u pi-agent -f`
 
+
+## Delete
+
+sudo systemctl stop pi-agent
+sudo systemctl disable pi-agent
+sudo rm /etc/systemd/system/pi-agent.service
+sudo systemctl daemon-reload
+
+rm -rf /home/box10/pi-agent
+
 ---
 
 **Made with ❤️ for managing multiple Raspberry Pis running FullPageOS**
