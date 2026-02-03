@@ -64,7 +64,7 @@ def change_url():
 
 @app.route('/restart-browser', methods=['POST'])
 def restart_browser():
-    result = run_command("sudo systemctl restart fullpageos")
+    result = run_command("pkill chromium")
     return jsonify({'success': result['success'], 'message': 'Browser restarted' if result['success'] else result.get('error')})
 
 @app.route('/reboot', methods=['POST'])
