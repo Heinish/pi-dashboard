@@ -25,8 +25,6 @@ SSH into each Pi and run this one command:
 curl -sSL https://raw.githubusercontent.com/Heinish/pi-dashboard/main/simple_install.sh | bash
 ```
 
-**⚠️ Replace `YOUR_USERNAME` with your actual GitHub username!**
-
 This installs a tiny agent (5KB, 15MB RAM) that runs on port 5000.
 
 ### Step 2: Set Up the Dashboard
