@@ -43,6 +43,11 @@ py -m pip install flask requests
 python3 dashboard_server.py
 ```
 
+```bash
+# Install on rasberry
+curl -sSL https://raw.githubusercontent.com/Heinish/pi-dashboard/main/install_dashboard.sh | bash
+```
+
 ### Step 3: Access & Configure
 
 1. Open your browser to: `http://localhost:8080`
@@ -208,6 +213,36 @@ sudo systemctl daemon-reload
 
 rm -rf /home/box10/pi-agent
 ```
+
+## Server Commands
+
+
+# Reload systemd to recognize the new service
+sudo systemctl daemon-reload
+
+# Enable it to start on boot
+sudo systemctl enable pi-dashboard
+
+# Start it now
+sudo systemctl start pi-dashboard
+
+# Check if it's running
+sudo systemctl status pi-dashboard
+
+# Stop the dashboard
+sudo systemctl stop pi-dashboard
+
+# Restart the dashboard
+sudo systemctl restart pi-dashboard
+
+# View logs
+sudo journalctl -u pi-dashboard -f
+
+# Disable auto-start
+sudo systemctl disable pi-dashboard
+
+
+
 
 ---
 
