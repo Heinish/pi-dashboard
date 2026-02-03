@@ -100,6 +100,7 @@ Dashboard automatically refreshes every 30 seconds, or click **"🔄 Refresh"** 
 ```
 pi-dashboard/
 ├── simple_install.sh       # One-line installer for Pis
+├── install_dashboard.sh    # One line installer for Dashboard P
 ├── dashboard_server.py     # Main dashboard server
 ├── templates/
 │   └── dashboard.html      # Web interface
