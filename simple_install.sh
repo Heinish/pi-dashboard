@@ -82,19 +82,17 @@ chmod +x ~/pi-agent/pi_agent.py
 pip3 install flask --break-system-packages 2>/dev/null || pip3 install flask
 
 # Create service
-sudo tee /etc/systemd/system/pi-agent.service > /dev/null << 'EOF'
+sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
 [Unit]
 Description=Raspberry Pi Dashboard Agent
 After=network.target
-
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/pi-agent
-ExecStart=/usr/bin/python3 /home/pi/pi-agent/pi_agent.py
+User=$USER
+WorkingDirectory=$HOME/pi-agent
+ExecStart=/usr/bin/python3 $HOME/pi-agent/pi_agent.py
 Restart=always
 RestartSec=10
-
 [Install]
 WantedBy=multi-user.target
 EOF
