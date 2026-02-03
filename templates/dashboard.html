@@ -94,7 +94,7 @@
 
         .pi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
             gap: 20px;
         }
 
@@ -183,6 +183,53 @@
         .info-value {
             color: #2d3748;
             font-family: 'Courier New', monospace;
+        }
+
+        /* New Current URL Display Styles */
+        .current-url-display {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            margin-top: 8px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .current-url-display:hover {
+            border-color: #764ba2;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .url-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .url-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .url-label {
+            font-size: 11px;
+            color: #667eea;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .url-text {
+            color: #2d3748;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            line-height: 1.4;
         }
 
         .url-control {
@@ -436,7 +483,7 @@
                     </div>
                     <div class="pi-info" id="info-${pi.ip.replace(/\./g, '-')}">
                         <div class="info-row">
-                            <span class="info-label">IP:</span>
+                            <span class="info-label">📍 IP:</span>
                             <span class="info-value">${pi.ip}</span>
                         </div>
                         <div class="info-row">
@@ -444,20 +491,30 @@
                             <span class="info-value">Checking...</span>
                         </div>
                     </div>
+                    
+                    <!-- Current URL Display Box -->
+                    <div class="current-url-display" id="current-url-${pi.ip.replace(/\./g, '-')}">
+                        <span class="url-icon">🌐</span>
+                        <div class="url-content">
+                            <div class="url-label">Currently Displaying</div>
+                            <div class="url-text">Loading...</div>
+                        </div>
+                    </div>
+                    
                     <div class="url-control">
                         <input type="text" 
                                id="url-${pi.ip.replace(/\./g, '-')}" 
-                               placeholder="Enter new URL"
+                               placeholder="Enter new URL to display"
                                value="">
                         <div class="button-group">
-                            <button class="btn-info" onclick="setUrl('${pi.ip}')">Set URL</button>
+                            <button class="btn-info" onclick="setUrl('${pi.ip}')">🔄 Set URL</button>
                             <button class="btn-success" onclick="previewUrl('${pi.ip}')">👁️ Preview</button>
                         </div>
                     </div>
                     <div class="button-group">
-                        <button class="btn-warning" onclick="restartBrowser('${pi.ip}')">Restart Browser</button>
-                        <button class="btn-danger" onclick="rebootPi('${pi.ip}')">Reboot</button>
-                        <button class="btn-secondary" onclick="removePi('${pi.ip}')">Remove</button>
+                        <button class="btn-warning" onclick="restartBrowser('${pi.ip}')">🔃 Restart Browser</button>
+                        <button class="btn-danger" onclick="rebootPi('${pi.ip}')">⚡ Reboot</button>
+                        <button class="btn-secondary" onclick="removePi('${pi.ip}')">🗑️ Remove</button>
                     </div>
                 </div>
             `).join('');
@@ -467,6 +524,7 @@
             const statusId = `status-${ip.replace(/\./g, '-')}`;
             const infoId = `info-${ip.replace(/\./g, '-')}`;
             const urlInputId = `url-${ip.replace(/\./g, '-')}`;
+            const currentUrlId = `current-url-${ip.replace(/\./g, '-')}`;
             
             try {
                 const response = await fetch(`/api/pis/${ip}/status`);
@@ -475,6 +533,7 @@
                 const statusEl = document.getElementById(statusId);
                 const infoEl = document.getElementById(infoId);
                 const urlInput = document.getElementById(urlInputId);
+                const currentUrlEl = document.getElementById(currentUrlId);
                 
                 if (data.online) {
                     statusEl.className = 'status-indicator status-online';
@@ -482,30 +541,37 @@
                     
                     infoEl.innerHTML = `
                         <div class="info-row">
-                            <span class="info-label">IP:</span>
+                            <span class="info-label">📍 IP:</span>
                             <span class="info-value">${ip}</span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">Current URL:</span>
-                            <span class="info-value">${status.current_url || 'Unknown'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Uptime:</span>
+                            <span class="info-label">⏱️ Uptime:</span>
                             <span class="info-value">${status.uptime || 'Unknown'}</span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">CPU:</span>
+                            <span class="info-label">💻 CPU:</span>
                             <span class="info-value">${status.cpu_usage || 'N/A'}%</span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">Memory:</span>
+                            <span class="info-label">🧠 Memory:</span>
                             <span class="info-value">${status.memory || 'N/A'}</span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">Temp:</span>
+                            <span class="info-label">🌡️ Temp:</span>
                             <span class="info-value">${status.temperature || 'N/A'}</span>
                         </div>
                     `;
+                    
+                    // Update the current URL display box
+                    if (currentUrlEl && status.current_url) {
+                        currentUrlEl.innerHTML = `
+                            <span class="url-icon">🌐</span>
+                            <div class="url-content">
+                                <div class="url-label">Currently Displaying</div>
+                                <div class="url-text">${status.current_url}</div>
+                            </div>
+                        `;
+                    }
                     
                     if (urlInput && status.current_url) {
                         urlInput.value = status.current_url;
@@ -514,14 +580,25 @@
                     statusEl.className = 'status-indicator status-offline';
                     infoEl.innerHTML = `
                         <div class="info-row">
-                            <span class="info-label">IP:</span>
+                            <span class="info-label">📍 IP:</span>
                             <span class="info-value">${ip}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Status:</span>
-                            <span class="info-value" style="color: #f56565;">Offline</span>
+                            <span class="info-value" style="color: #f56565;">❌ Offline</span>
                         </div>
                     `;
+                    
+                    // Update current URL display for offline status
+                    if (currentUrlEl) {
+                        currentUrlEl.innerHTML = `
+                            <span class="url-icon">⚠️</span>
+                            <div class="url-content">
+                                <div class="url-label">Currently Displaying</div>
+                                <div class="url-text" style="color: #f56565;">Pi is offline</div>
+                            </div>
+                        `;
+                    }
                 }
             } catch (error) {
                 console.error(`Error updating status for ${ip}:`, error);
@@ -622,7 +699,7 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    alert('URL updated successfully!');
+                    alert('✅ URL updated successfully! Browser restarted.');
                     await updatePiStatus(ip);
                 } else {
                     alert('Failed to update URL: ' + (data.error || 'Unknown error'));
