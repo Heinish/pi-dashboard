@@ -32,6 +32,9 @@ This installs a tiny agent (5KB, 15MB RAM) that runs on port 5000.
 On your main computer (or one designated Pi):
 
 ```bash
+# Install on rasberry
+curl -sSL https://raw.githubusercontent.com/Heinish/pi-dashboard/main/install_dashboard.sh | bash
+
 # Clone this repository
 git clone https://github.com/heinish/pi-dashboard.git
 cd pi-dashboard
@@ -41,11 +44,8 @@ py -m pip install flask requests
 
 # Start the dashboard
 python3 dashboard_server.py
-```
 
-```bash
-# Install on rasberry
-curl -sSL https://raw.githubusercontent.com/Heinish/pi-dashboard/main/install_dashboard.sh | bash
+
 ```
 
 ### Step 3: Access & Configure
