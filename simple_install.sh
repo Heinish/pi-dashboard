@@ -69,7 +69,7 @@ def restart_browser():
 
 @app.route('/reboot', methods=['POST'])
 def reboot():
-    subprocess.Popen(['sudo', 'shutdown', '-r', '+0.1'])
+    subprocess.Popen(['sudo reboot'])
     return jsonify({'success': True, 'message': 'Pi is rebooting...'})
 
 if __name__ == '__main__':
