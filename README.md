@@ -216,31 +216,39 @@ rm -rf /home/box10/pi-agent
 
 ## Server Commands
 
-
-# Reload systemd to recognize the new service
+```bash
+- Reload systemd to recognize the new service
 sudo systemctl daemon-reload
-
-# Enable it to start on boot
+```
+```bash
+- Enable it to start on boot
 sudo systemctl enable pi-dashboard
-
-# Start it now
+```
+```bash
+- Start it now
 sudo systemctl start pi-dashboard
-
-# Check if it's running
+```
+```bash
+- Check if it's running
 sudo systemctl status pi-dashboard
-
-# Stop the dashboard
+```
+```bash
+- Stop the dashboard
 sudo systemctl stop pi-dashboard
-
-# Restart the dashboard
+```
+```bash
+- Restart the dashboard
 sudo systemctl restart pi-dashboard
-
-# View logs
+```
+```bash
+- View logs
 sudo journalctl -u pi-dashboard -f
-
-# Disable auto-start
+```
+```bash
+- Disable auto-start
+```bash
 sudo systemctl disable pi-dashboard
-
+```
 
 
 
