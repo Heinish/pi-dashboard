@@ -22,7 +22,7 @@ A simple web dashboard to manage multiple Raspberry Pi devices running FullPageO
 SSH into each Pi and run this one command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/pi-dashboard/main/simple_install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Heinish/pi-dashboard/main/simple_install.sh | bash
 ```
 
 **⚠️ Replace `YOUR_USERNAME` with your actual GitHub username!**
