@@ -39,7 +39,7 @@ git clone https://github.com/YOUR_USERNAME/pi-dashboard.git
 cd pi-dashboard
 
 # Install Python dependencies
-pip3 install flask requests
+py -m pip install flask requests
 
 # Start the dashboard
 python3 dashboard_server.py
