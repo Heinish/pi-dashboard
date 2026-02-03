@@ -31,6 +31,29 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
         
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn-add {
+            background: white;
+            color: #667eea;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
         .pi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -44,11 +67,33 @@
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
         }
         
         .pi-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .btn-remove {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-remove:hover {
+            background: #dc2626;
+            transform: scale(1.1);
         }
         
         .pi-header {
@@ -114,7 +159,7 @@
             margin-bottom: 10px;
         }
         
-        .url-input {
+        .url-input, .resolution-select {
             width: 100%;
             padding: 10px;
             border: 2px solid #e5e7eb;
@@ -124,9 +169,15 @@
             transition: border-color 0.3s;
         }
         
-        .url-input:focus {
+        .url-input:focus, .resolution-select:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        .resolution-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e5e7eb;
         }
         
         .button-group {
@@ -183,7 +234,16 @@
             background: #059669;
         }
         
-        /* Preview Modal */
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -206,8 +266,24 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
         
+        .modal-small {
+            width: 500px;
+            height: auto;
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+        }
+        
         .modal-header {
             background: #374151;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header-light {
+            background: #667eea;
             padding: 20px;
             display: flex;
             justify-content: space-between;
@@ -218,6 +294,34 @@
             color: white;
             font-size: 1.3em;
             font-weight: 600;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
         }
         
         .close {
@@ -263,6 +367,11 @@
 <body>
     <div class="container">
         <h1>🍓 Raspberry Pi Dashboard</h1>
+        
+        <div class="controls">
+            <button class="btn-add" onclick="showAddPiModal()">➕ Add Raspberry Pi</button>
+        </div>
+        
         <div class="pi-grid" id="piGrid">
             <!-- Pi cards will be inserted here -->
         </div>
@@ -273,23 +382,50 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span class="modal-title" id="modalTitle">Preview</span>
-                <span class="close" onclick="closePreview()">&times;</span>
+                <span class="close" onclick="closeModal('previewModal')">&times;</span>
             </div>
             <iframe id="previewFrame" class="modal-iframe"></iframe>
         </div>
     </div>
 
+    <!-- Add Pi Modal -->
+    <div id="addPiModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header-light">
+                <span class="modal-title">Add New Raspberry Pi</span>
+                <span class="close" onclick="closeModal('addPiModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Pi Name:</label>
+                    <input type="text" class="form-input" id="newPiName" placeholder="e.g., box10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">IP Address:</label>
+                    <input type="text" class="form-input" id="newPiIp" placeholder="e.g., 192.168.1.10">
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="addPi()">Add Pi</button>
+                    <button class="btn btn-secondary" onclick="closeModal('addPiModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Configuration - Update these IPs to match your Raspberry Pis
-        const RASPBERRY_PIS = [
+        // Load Raspberry Pis from localStorage or use defaults
+        let RASPBERRY_PIS = JSON.parse(localStorage.getItem('raspberryPis')) || [
             { name: 'box10', ip: '192.168.1.10' },
             { name: 'box11', ip: '192.168.1.11' },
-            { name: 'box12', ip: '192.168.1.12' },
-            // Add more Pis as needed
         ];
 
         // Refresh interval in milliseconds
         const REFRESH_INTERVAL = 5000;
+
+        // Save Pis to localStorage
+        function savePis() {
+            localStorage.setItem('raspberryPis', JSON.stringify(RASPBERRY_PIS));
+        }
 
         // Initialize dashboard
         function initDashboard() {
@@ -313,6 +449,7 @@
             card.className = 'pi-card';
             card.id = `pi-${pi.name}`;
             card.innerHTML = `
+                <button class="btn-remove" onclick="removePi('${pi.name}')" title="Remove Pi">×</button>
                 <div class="pi-header">
                     <div class="pi-name">${pi.name}</div>
                     <div class="status-badge status-offline" id="status-${pi.name}">Checking...</div>
@@ -332,6 +469,18 @@
                         <button class="btn btn-secondary" onclick="restartBrowser('${pi.name}')">Restart Browser</button>
                         <button class="btn btn-preview" onclick="previewUrl('${pi.name}')">👁️ Preview Current URL</button>
                         <button class="btn btn-danger" onclick="rebootPi('${pi.name}')">Reboot Pi</button>
+                    </div>
+                    
+                    <div class="resolution-section">
+                        <div class="stat-label">Display Resolution:</div>
+                        <select class="resolution-select" id="resolution-${pi.name}">
+                            <option value="">Select Resolution</option>
+                            <option value="1920x1080">1920x1080 (Full HD)</option>
+                            <option value="1280x720">1280x720 (HD)</option>
+                            <option value="1024x768">1024x768</option>
+                            <option value="800x600">800x600</option>
+                        </select>
+                        <button class="btn btn-warning" onclick="changeResolution('${pi.name}')">Change Resolution</button>
                     </div>
                 </div>
             `;
@@ -457,6 +606,37 @@
             }
         }
 
+        async function changeResolution(piName) {
+            const pi = RASPBERRY_PIS.find(p => p.name === piName);
+            const resolutionSelect = document.getElementById(`resolution-${piName}`);
+            const resolution = resolutionSelect.value;
+            
+            if (!resolution) {
+                alert('Please select a resolution');
+                return;
+            }
+            
+            if (!confirm(`Change resolution to ${resolution} on ${piName}? Pi will need to be rebooted to apply.`)) return;
+            
+            try {
+                const response = await fetch(`http://${pi.ip}:5000/resolution`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resolution: resolution })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`${data.message}\n\nWould you like to reboot now?`) && rebootPi(piName);
+                } else {
+                    alert(`Failed to change resolution: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
         function previewUrl(piName) {
             const urlDisplay = document.getElementById(`url-display-${piName}`);
             const url = urlDisplay.textContent;
@@ -475,25 +655,68 @@
             modal.style.display = 'block';
         }
 
-        function closePreview() {
-            const modal = document.getElementById('previewModal');
-            const iframe = document.getElementById('previewFrame');
+        function showAddPiModal() {
+            document.getElementById('addPiModal').style.display = 'block';
+            document.getElementById('newPiName').value = '';
+            document.getElementById('newPiIp').value = '';
+        }
+
+        function addPi() {
+            const name = document.getElementById('newPiName').value.trim();
+            const ip = document.getElementById('newPiIp').value.trim();
+            
+            if (!name || !ip) {
+                alert('Please fill in both name and IP address');
+                return;
+            }
+            
+            // Check if Pi already exists
+            if (RASPBERRY_PIS.find(p => p.name === name)) {
+                alert('A Pi with this name already exists');
+                return;
+            }
+            
+            // Add new Pi
+            RASPBERRY_PIS.push({ name, ip });
+            savePis();
+            
+            // Close modal and refresh dashboard
+            closeModal('addPiModal');
+            initDashboard();
+        }
+
+        function removePi(piName) {
+            if (!confirm(`Remove ${piName} from dashboard?`)) return;
+            
+            RASPBERRY_PIS = RASPBERRY_PIS.filter(p => p.name !== piName);
+            savePis();
+            initDashboard();
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
             modal.style.display = 'none';
-            iframe.src = '';
+            
+            if (modalId === 'previewModal') {
+                document.getElementById('previewFrame').src = '';
+            }
         }
 
         // Close modal when clicking outside of it
         window.onclick = function(event) {
-            const modal = document.getElementById('previewModal');
-            if (event.target == modal) {
-                closePreview();
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                if (event.target.id === 'previewModal') {
+                    document.getElementById('previewFrame').src = '';
+                }
             }
         }
 
         // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                closePreview();
+                closeModal('previewModal');
+                closeModal('addPiModal');
             }
         });
 
