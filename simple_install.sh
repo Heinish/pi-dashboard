@@ -69,8 +69,11 @@ def restart_browser():
 
 @app.route('/reboot', methods=['POST'])
 def reboot():
-    subprocess.Popen(['sudo reboot'])
-    return jsonify({'success': True, 'message': 'Pi is rebooting...'})
+    try:
+        subprocess.Popen(['/sbin/reboot'])
+        return jsonify({'success': True, 'message': 'Pi is rebooting...'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
@@ -81,6 +84,11 @@ chmod +x ~/pi-agent/pi_agent.py
 # Install Flask with proper flags for modern Raspberry Pi OS
 echo "Installing Flask..."
 sudo pip3 install flask --break-system-packages
+
+# Configure passwordless reboot for the service
+echo "Configuring reboot permissions..."
+echo "$USER ALL=(ALL) NOPASSWD: /sbin/reboot" | sudo tee /etc/sudoers.d/pi-agent-reboot > /dev/null
+sudo chmod 0440 /etc/sudoers.d/pi-agent-reboot
 
 # Create service with absolute paths
 sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
