@@ -88,7 +88,7 @@ Description=Raspberry Pi Dashboard Agent
 After=network.target
 [Service]
 Type=simple
-User=$USER
+User=root
 WorkingDirectory=$HOME/pi-agent
 ExecStart=/usr/bin/python3 $HOME/pi-agent/pi_agent.py
 Restart=always
