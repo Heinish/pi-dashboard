@@ -1,5 +1,4 @@
 #!/bin/bash
-# Super Simple Pi Agent Installer - Copy and paste this entire script!
 
 echo "Installing Pi Dashboard Agent..."
 
@@ -58,7 +57,16 @@ def change_url():
         # Simply overwrite the entire file with just the new URL
         with open(config_path, 'w') as f:
             f.write(f'{new_url}\n')
-        return jsonify({'success': True, 'message': f'URL updated to {new_url}', 'new_url': new_url})
+        
+        # Restart the browser to load the new URL
+        browser_result = run_command("pkill chromium")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'URL updated to {new_url} and browser restarted', 
+            'new_url': new_url,
+            'browser_restarted': browser_result['success']
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -69,11 +77,8 @@ def restart_browser():
 
 @app.route('/reboot', methods=['POST'])
 def reboot():
-    try:
-        subprocess.Popen(['/sbin/reboot'])
-        return jsonify({'success': True, 'message': 'Pi is rebooting...'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+    subprocess.Popen(['sudo reboot'])
+    return jsonify({'success': True, 'message': 'Pi is rebooting...'})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
@@ -81,21 +86,14 @@ EOF
 
 chmod +x ~/pi-agent/pi_agent.py
 
-# Install Flask with proper flags for modern Raspberry Pi OS
-echo "Installing Flask..."
-sudo pip3 install flask --break-system-packages
+# Install Flask
+pip3 install flask --break-system-packages 2>/dev/null || pip3 install flask
 
-# Configure passwordless reboot for the service
-echo "Configuring reboot permissions..."
-echo "$USER ALL=(ALL) NOPASSWD: /sbin/reboot" | sudo tee /etc/sudoers.d/pi-agent-reboot > /dev/null
-sudo chmod 0440 /etc/sudoers.d/pi-agent-reboot
-
-# Create service with absolute paths
+# Create service
 sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
 [Unit]
 Description=Raspberry Pi Dashboard Agent
 After=network.target
-
 [Service]
 Type=simple
 User=root
@@ -103,7 +101,6 @@ WorkingDirectory=$HOME/pi-agent
 ExecStart=/usr/bin/python3 $HOME/pi-agent/pi_agent.py
 Restart=always
 RestartSec=10
-
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -119,7 +116,5 @@ if sudo systemctl is-active --quiet pi-agent; then
     echo "✅ SUCCESS! Agent is running on port 5000"
     echo "Test it: curl http://localhost:5000/health"
 else
-    echo "⚠️ Installation may have issues. Check status with:"
-    echo "   sudo systemctl status pi-agent"
-    echo "   sudo journalctl -u pi-agent -n 20"
+    echo "⚠️ Check status: sudo systemctl status pi-agent"
 fi
