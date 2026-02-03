@@ -147,8 +147,49 @@ def restart_browser():
 
 @app.route('/reboot', methods=['POST'])
 def reboot():
-    subprocess.Popen(['sudo', 'shutdown', '-r', '+0.1'])
+    subprocess.Popen(['sudo reboot'])
     return jsonify({'success': True, 'message': 'Pi is rebooting...'})
+
+@app.route('/resolution', methods=['POST'])
+def change_resolution():
+    resolution = request.get_json().get('resolution')
+    if not resolution: return jsonify({'success': False, 'error': 'No resolution provided'}), 400
+    
+    try:
+        # Extract width and height
+        width, height = resolution.split('x')
+        
+        # Find config file
+        config_file = None
+        for path in ["/boot/config.txt", "/boot/firmware/config.txt"]:
+            if os.path.exists(path):
+                config_file = path
+                break
+        
+        if not config_file:
+            return jsonify({'success': False, 'error': 'Config file not found'}), 500
+        
+        # Read current config
+        with open(config_file, 'r') as f:
+            lines = f.readlines()
+        
+        # Remove old hdmi settings
+        lines = [l for l in lines if not any(x in l for x in ['hdmi_mode=', 'hdmi_group=', 'hdmi_cvt=', '# Display resolution set by'])]
+        
+        # Add new resolution settings
+        lines.append('\\n')
+        lines.append('# Display resolution set by pi-agent\\n')
+        lines.append('hdmi_group=2\\n')
+        lines.append('hdmi_mode=87\\n')
+        lines.append(f'hdmi_cvt={width} {height} 60 6 0 0 0\\n')
+        
+        # Write back
+        with open(config_file, 'w') as f:
+            f.writelines(lines)
+        
+        return jsonify({'success': True, 'message': f'Resolution set to {resolution}. Reboot required to apply.'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
