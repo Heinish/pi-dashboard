@@ -78,14 +78,16 @@ EOF
 
 chmod +x ~/pi-agent/pi_agent.py
 
-# Install Flask
-pip3 install flask --break-system-packages 2>/dev/null || pip3 install flask
+# Install Flask with proper flags for modern Raspberry Pi OS
+echo "Installing Flask..."
+sudo pip3 install flask --break-system-packages
 
-# Create service
+# Create service with absolute paths
 sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
 [Unit]
 Description=Raspberry Pi Dashboard Agent
 After=network.target
+
 [Service]
 Type=simple
 User=root
@@ -93,6 +95,7 @@ WorkingDirectory=$HOME/pi-agent
 ExecStart=/usr/bin/python3 $HOME/pi-agent/pi_agent.py
 Restart=always
 RestartSec=10
+
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -108,5 +111,7 @@ if sudo systemctl is-active --quiet pi-agent; then
     echo "✅ SUCCESS! Agent is running on port 5000"
     echo "Test it: curl http://localhost:5000/health"
 else
-    echo "⚠️ Check status: sudo systemctl status pi-agent"
+    echo "⚠️ Installation may have issues. Check status with:"
+    echo "   sudo systemctl status pi-agent"
+    echo "   sudo journalctl -u pi-agent -n 20"
 fi
