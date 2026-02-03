@@ -103,26 +103,6 @@ pi-dashboard/
 └── README.md              # This file
 ```
 
-## 🔧 Advanced Usage
-
-### Manual Installation on Pi
-
-If you prefer not to use the one-line installer:
-
-```bash
-# SSH into your Pi
-ssh pi@192.168.1.101
-
-# Download the installer
-wget https://raw.githubusercontent.com/YOUR_USERNAME/pi-dashboard/main/simple_install.sh
-
-# Make it executable
-chmod +x simple_install.sh
-
-# Run it
-./simple_install.sh
-```
-
 ### Check Agent Status
 
 ```bash
@@ -139,15 +119,6 @@ sudo systemctl restart pi-agent
 curl http://localhost:5000/health
 ```
 
-### Custom Dashboard Port
-
-Edit `dashboard_server.py`, line 141:
-```python
-app.run(host='0.0.0.0', port=8080, debug=True)
-```
-
-Change `8080` to your desired port.
-
 ## 📡 API Endpoints
 
 The agent on each Pi exposes these endpoints:
@@ -158,24 +129,12 @@ The agent on each Pi exposes these endpoints:
 - `POST /restart-browser` - Restart Chromium
 - `POST /reboot` - Reboot the Pi
 
-Example:
-```bash
-# Change URL
-curl -X POST http://192.168.1.101:5000/url \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://google.com"}'
-
-# Get status
-curl http://192.168.1.101:5000/status
-```
-
 ## 🐛 Troubleshooting
 
 ### Pi shows as "Offline"
 
 1. Check if agent is running:
    ```bash
-   ssh pi@PI_IP
    sudo systemctl status pi-agent
    ```
 
@@ -198,15 +157,6 @@ sudo chmod 666 /boot/fullpageos.txt
 sudo chmod 666 /boot/firmware/fullpageos.txt
 ```
 
-### Dashboard Won't Start
-
-```bash
-# Install dependencies
-pip3 install flask requests
-
-# Check if port 8080 is already in use
-netstat -tuln | grep 8080
-```
 
 ## 🔒 Security Notes
 
@@ -252,13 +202,14 @@ Free to use and modify!
 
 
 ## Delete
-
+```bash
 sudo systemctl stop pi-agent
 sudo systemctl disable pi-agent
 sudo rm /etc/systemd/system/pi-agent.service
 sudo systemctl daemon-reload
 
 rm -rf /home/box10/pi-agent
+```
 
 ---
 
