@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raspberry Pi Dashboard</title>
+    <title>🍓 Raspberry Pi Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -23,93 +23,76 @@
             margin: 0 auto;
         }
 
-        .header {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        header {
+            text-align: center;
+            color: white;
             margin-bottom: 30px;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 15px;
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
             flex-wrap: wrap;
             align-items: center;
         }
 
         button {
-            background: #667eea;
-            color: white;
-            border: none;
             padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
+            border: none;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s;
         }
 
         button:hover {
-            background: #5568d3;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
+        .btn-primary {
+            background: #667eea;
+            color: white;
         }
 
         .btn-success {
-            background: #27ae60;
+            background: #48bb78;
+            color: white;
         }
 
-        .btn-success:hover {
-            background: #229954;
+        .btn-warning {
+            background: #f6ad55;
+            color: white;
         }
 
-        input[type="text"] {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            flex: 1;
-            min-width: 200px;
+        .btn-danger {
+            background: #f56565;
+            color: white;
         }
 
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
+        .btn-info {
+            background: #4299e1;
+            color: white;
         }
 
-        .bulk-controls {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            display: none;
+        .btn-secondary {
+            background: #718096;
+            color: white;
         }
 
-        .bulk-controls.active {
-            display: block;
-        }
-
-        .grid {
+        .pi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
@@ -117,568 +100,690 @@
 
         .pi-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s, box-shadow 0.3s;
-            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
         }
 
         .pi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        }
-
-        .pi-card.offline {
-            opacity: 0.6;
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
         }
 
         .pi-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 15px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .pi-name-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
         }
 
         .pi-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .edit-name-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
             font-size: 18px;
-            font-weight: 700;
-            color: #333;
+            color: #4299e1;
+            padding: 5px;
+            transition: all 0.2s;
+        }
+
+        .edit-name-btn:hover {
+            color: #2c5282;
+            transform: scale(1.1);
         }
 
         .status-indicator {
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #e74c3c;
             display: inline-block;
-            margin-right: 5px;
         }
 
-        .status-indicator.online {
-            background: #27ae60;
-            box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+        .status-online {
+            background: #48bb78;
+            box-shadow: 0 0 8px rgba(72, 187, 120, 0.6);
+        }
+
+        .status-offline {
+            background: #f56565;
+            box-shadow: 0 0 8px rgba(245, 101, 101, 0.6);
         }
 
         .pi-info {
-            margin: 15px 0;
+            margin-bottom: 15px;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            font-size: 14px;
-            color: #666;
+            border-bottom: 1px solid #f7fafc;
         }
 
         .info-label {
+            color: #718096;
             font-weight: 600;
-            color: #333;
         }
 
         .info-value {
-            color: #667eea;
-            font-weight: 500;
-            max-width: 60%;
-            text-align: right;
-            word-break: break-all;
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
         }
 
-        .pi-controls {
+        .url-control {
+            margin-bottom: 15px;
+        }
+
+        .url-control input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .url-control input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-top: 15px;
         }
 
-        .pi-controls button {
+        .button-group button {
             flex: 1;
             min-width: 100px;
             font-size: 12px;
             padding: 8px 12px;
         }
 
-        .url-input-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
         }
 
-        .url-input-group input {
-            flex: 1;
-            font-size: 13px;
-            padding: 8px 12px;
-        }
-
-        .url-input-group button {
-            padding: 8px 15px;
-            font-size: 12px;
-        }
-
-        .add-pi-form {
+        .modal-content {
             background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
 
-        .form-row {
+        .modal-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-item {
             display: flex;
-            gap: 10px;
             align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f7fafc;
+            border-radius: 6px;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: white;
-            font-size: 18px;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 0;
-        }
-
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
         }
 
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
             background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            z-index: 1000;
-            animation: slideIn 0.3s ease-out;
-            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        .empty-state h2 {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 10px;
         }
 
-        .notification.success {
-            border-left: 4px solid #27ae60;
+        .empty-state p {
+            color: #718096;
+            font-size: 1.1em;
         }
 
-        .notification.error {
-            border-left: 4px solid #e74c3c;
+        /* Preview Modal Styles */
+        .preview-modal .modal-content {
+            max-width: 90%;
+            max-height: 90vh;
+            padding: 20px;
         }
 
-        .select-all {
-            margin-right: 10px;
+        .preview-modal iframe {
+            width: 100%;
+            height: 70vh;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .close-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <header>
             <h1>🍓 Raspberry Pi Dashboard</h1>
-            <div class="controls">
-                <button onclick="refreshStatus()">🔄 Refresh</button>
-                <button onclick="toggleAddForm()">➕ Add Pi</button>
-                <button onclick="toggleBulkMode()" id="bulkModeBtn">📋 Bulk Actions</button>
-            </div>
+            <p>Manage all your FullPageOS displays from one place</p>
+        </header>
 
-            <div class="bulk-controls" id="bulkControls">
-                <h3 style="margin-bottom: 10px;">Bulk Actions</h3>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <label class="select-all">
-                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        Select All
-                    </label>
-                    <input type="text" id="bulkUrlInput" placeholder="Enter URL for selected Pis">
-                    <button onclick="bulkChangeUrl()" class="btn-success">Change URL</button>
-                    <button onclick="bulkRestartBrowser()">Restart Browsers</button>
-                    <span id="selectedCount" style="margin-left: 10px; color: #666;"></span>
-                </div>
-            </div>
+        <div class="controls">
+            <button class="btn-primary" onclick="showAddPiModal()">➕ Add Pi</button>
+            <button class="btn-success" onclick="refreshAll()">🔄 Refresh</button>
+            <button class="btn-warning" onclick="showBulkActions()">📋 Bulk Actions</button>
         </div>
 
-        <div class="add-pi-form" id="addPiForm" style="display: none;">
-            <h3 style="margin-bottom: 15px;">Add New Raspberry Pi</h3>
-            <div class="form-row">
-                <input type="text" id="piIp" placeholder="Pi IP Address (e.g., 192.168.1.100)">
-                <input type="text" id="piName" placeholder="Pi Name (e.g., Living Room)">
-                <button onclick="addPi()" class="btn-success">Add</button>
-                <button onclick="toggleAddForm()" class="btn-danger">Cancel</button>
+        <div id="piGrid" class="pi-grid"></div>
+    </div>
+
+    <!-- Add Pi Modal -->
+    <div id="addPiModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Add New Raspberry Pi</h2>
+            <div class="form-group">
+                <label for="piIp">IP Address</label>
+                <input type="text" id="piIp" placeholder="e.g., 192.168.1.100">
+            </div>
+            <div class="form-group">
+                <label for="piName">Friendly Name</label>
+                <input type="text" id="piName" placeholder="e.g., Living Room Display">
+            </div>
+            <div class="button-group">
+                <button class="btn-success" onclick="addPi()">Add</button>
+                <button class="btn-secondary" onclick="closeModal('addPiModal')">Cancel</button>
             </div>
         </div>
+    </div>
 
-        <div class="grid" id="piGrid">
-            <div class="loading">Loading Pis...</div>
+    <!-- Bulk Actions Modal -->
+    <div id="bulkModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Bulk Actions</h2>
+            <div id="bulkPiList"></div>
+            <div class="form-group">
+                <label for="bulkUrl">New URL (for URL change)</label>
+                <input type="text" id="bulkUrl" placeholder="https://example.com">
+            </div>
+            <div class="button-group">
+                <button class="btn-info" onclick="bulkChangeUrl()">Change URLs</button>
+                <button class="btn-warning" onclick="bulkRestartBrowser()">Restart Browsers</button>
+                <button class="btn-secondary" onclick="closeModal('bulkModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal preview-modal">
+        <div class="modal-content">
+            <div class="preview-header">
+                <h2 class="modal-header" id="previewTitle">Website Preview</h2>
+                <button class="close-btn" onclick="closeModal('previewModal')">✕ Close</button>
+            </div>
+            <iframe id="previewFrame" src="about:blank"></iframe>
         </div>
     </div>
 
     <script>
         let pis = [];
-        let bulkMode = false;
-        let selectedPis = new Set();
 
         async function loadPis() {
             try {
                 const response = await fetch('/api/pis');
                 pis = await response.json();
-                if (pis.length === 0) {
-                    document.getElementById('piGrid').innerHTML = '<div class="loading">No Pis configured. Click "Add Pi" to get started!</div>';
-                } else {
-                    refreshStatus();
+                renderPis();
+                if (pis.length > 0) {
+                    updateAllStatuses();
                 }
             } catch (error) {
-                showNotification('Failed to load Pis: ' + error.message, 'error');
+                console.error('Error loading Pis:', error);
             }
         }
 
-        async function refreshStatus() {
-            if (pis.length === 0) {
-                await loadPis();
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/status');
-                const statuses = await response.json();
-                renderPis(statuses);
-            } catch (error) {
-                showNotification('Failed to refresh status: ' + error.message, 'error');
-            }
-        }
-
-        function renderPis(statuses) {
+        function renderPis() {
             const grid = document.getElementById('piGrid');
-            grid.innerHTML = statuses.map(pi => {
-                const isOnline = pi.online;
-                const data = pi.data;
-                const isSelected = selectedPis.has(pi.ip);
-
-                return `
-                    <div class="pi-card ${!isOnline ? 'offline' : ''}">
-                        <div class="pi-header">
-                            <div>
-                                ${bulkMode ? `<input type="checkbox" ${isSelected ? 'checked' : ''} onchange="togglePiSelection('${pi.ip}')">` : ''}
-                                <span class="status-indicator ${isOnline ? 'online' : ''}"></span>
-                                <span class="pi-name">${pi.name}</span>
-                                <button onclick="editPiName('${pi.ip}', '${pi.name}')" style="background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0 5px;" title="Edit name">✏️</button>
-                            </div>
-                            <div style="font-size: 12px; color: #999;">${pi.ip}</div>
-                        </div>
-                        
-                        ${isOnline ? `
-                            <div class="pi-info">
-                                <div class="info-row">
-                                    <span class="info-label">Hostname:</span>
-                                    <span class="info-value">${data.hostname || 'N/A'}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Uptime:</span>
-                                    <span class="info-value">${data.uptime || 'N/A'}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Current URL:</span>
-                                    <span class="info-value" style="font-size: 11px;">${data.current_url || 'N/A'}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Memory:</span>
-                                    <span class="info-value">${data.memory || 'N/A'}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">CPU:</span>
-                                    <span class="info-value">${data.cpu_usage ? data.cpu_usage + '%' : 'N/A'}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Temp:</span>
-                                    <span class="info-value">${data.temperature || 'N/A'}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="url-input-group">
-                                <input type="text" id="url-${pi.ip.replace(/\./g, '-')}" placeholder="New URL">
-                                <button onclick="changeUrl('${pi.ip}')" class="btn-success">Set URL</button>
-                            </div>
-                            
-                            <div class="pi-controls">
-                                <button onclick="restartBrowser('${pi.ip}')">Restart Browser</button>
-                                <button onclick="rebootPi('${pi.ip}')" class="btn-danger">Reboot</button>
-                                <button onclick="removePi('${pi.ip}')" class="btn-danger">Remove</button>
-                            </div>
-                        ` : `
-                            <div style="padding: 20px; text-align: center; color: #999;">
-                                <p>Offline</p>
-                                <button onclick="removePi('${pi.ip}')" class="btn-danger" style="margin-top: 10px;">Remove</button>
-                            </div>
-                        `}
+            
+            if (pis.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No Raspberry Pis Added</h2>
+                        <p>Click "➕ Add Pi" to get started!</p>
                     </div>
                 `;
-            }).join('');
-        }
-
-        async function changeUrl(ip) {
-            const inputId = 'url-' + ip.replace(/\./g, '-');
-            const url = document.getElementById(inputId).value;
-            
-            if (!url) {
-                showNotification('Please enter a URL', 'error');
                 return;
             }
 
+            grid.innerHTML = pis.map(pi => `
+                <div class="pi-card" id="pi-${pi.ip.replace(/\./g, '-')}">
+                    <div class="pi-header">
+                        <div class="pi-name-container">
+                            <span class="status-indicator status-offline" id="status-${pi.ip.replace(/\./g, '-')}"></span>
+                            <span class="pi-name" id="name-${pi.ip.replace(/\./g, '-')}">${pi.name}</span>
+                            <button class="edit-name-btn" onclick="editPiName('${pi.ip}')" title="Edit name">✏️</button>
+                        </div>
+                    </div>
+                    <div class="pi-info" id="info-${pi.ip.replace(/\./g, '-')}">
+                        <div class="info-row">
+                            <span class="info-label">IP:</span>
+                            <span class="info-value">${pi.ip}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value">Checking...</span>
+                        </div>
+                    </div>
+                    <div class="url-control">
+                        <input type="text" 
+                               id="url-${pi.ip.replace(/\./g, '-')}" 
+                               placeholder="Enter new URL"
+                               value="">
+                        <div class="button-group">
+                            <button class="btn-info" onclick="setUrl('${pi.ip}')">Set URL</button>
+                            <button class="btn-success" onclick="previewUrl('${pi.ip}')">👁️ Preview</button>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-warning" onclick="restartBrowser('${pi.ip}')">Restart Browser</button>
+                        <button class="btn-danger" onclick="rebootPi('${pi.ip}')">Reboot</button>
+                        <button class="btn-secondary" onclick="removePi('${pi.ip}')">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updatePiStatus(ip) {
+            const statusId = `status-${ip.replace(/\./g, '-')}`;
+            const infoId = `info-${ip.replace(/\./g, '-')}`;
+            const urlInputId = `url-${ip.replace(/\./g, '-')}`;
+            
             try {
-                const response = await fetch(`/api/command/${ip}/url`, {
+                const response = await fetch(`/api/pis/${ip}/status`);
+                const data = await response.json();
+                
+                const statusEl = document.getElementById(statusId);
+                const infoEl = document.getElementById(infoId);
+                const urlInput = document.getElementById(urlInputId);
+                
+                if (data.online) {
+                    statusEl.className = 'status-indicator status-online';
+                    const status = data.status;
+                    
+                    infoEl.innerHTML = `
+                        <div class="info-row">
+                            <span class="info-label">IP:</span>
+                            <span class="info-value">${ip}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Current URL:</span>
+                            <span class="info-value">${status.current_url || 'Unknown'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Uptime:</span>
+                            <span class="info-value">${status.uptime || 'Unknown'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">CPU:</span>
+                            <span class="info-value">${status.cpu_usage || 'N/A'}%</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Memory:</span>
+                            <span class="info-value">${status.memory || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Temp:</span>
+                            <span class="info-value">${status.temperature || 'N/A'}</span>
+                        </div>
+                    `;
+                    
+                    if (urlInput && status.current_url) {
+                        urlInput.value = status.current_url;
+                    }
+                } else {
+                    statusEl.className = 'status-indicator status-offline';
+                    infoEl.innerHTML = `
+                        <div class="info-row">
+                            <span class="info-label">IP:</span>
+                            <span class="info-value">${ip}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value" style="color: #f56565;">Offline</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error(`Error updating status for ${ip}:`, error);
+            }
+        }
+
+        async function updateAllStatuses() {
+            for (const pi of pis) {
+                await updatePiStatus(pi.ip);
+            }
+        }
+
+        function showAddPiModal() {
+            document.getElementById('addPiModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'previewModal') {
+                document.getElementById('previewFrame').src = 'about:blank';
+            }
+        }
+
+        async function addPi() {
+            const ip = document.getElementById('piIp').value.trim();
+            const name = document.getElementById('piName').value.trim() || ip;
+            
+            if (!ip) {
+                alert('Please enter an IP address');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/pis', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ip, name})
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal('addPiModal');
+                    document.getElementById('piIp').value = '';
+                    document.getElementById('piName').value = '';
+                    await loadPis();
+                } else {
+                    alert(data.error || 'Failed to add Pi');
+                }
+            } catch (error) {
+                alert('Error adding Pi: ' + error.message);
+            }
+        }
+
+        async function removePi(ip) {
+            if (!confirm(`Remove ${ip} from dashboard?`)) return;
+            
+            try {
+                await fetch(`/api/pis/${ip}`, {method: 'DELETE'});
+                await loadPis();
+            } catch (error) {
+                alert('Error removing Pi: ' + error.message);
+            }
+        }
+
+        async function editPiName(ip) {
+            const currentName = pis.find(p => p.ip === ip)?.name || ip;
+            const newName = prompt('Enter new name:', currentName);
+            
+            if (newName && newName !== currentName) {
+                try {
+                    await fetch(`/api/pis/${ip}/name`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({name: newName})
+                    });
+                    await loadPis();
+                } catch (error) {
+                    alert('Error updating name: ' + error.message);
+                }
+            }
+        }
+
+        async function setUrl(ip) {
+            const urlInput = document.getElementById(`url-${ip.replace(/\./g, '-')}`);
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/pis/${ip}/url`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({url})
                 });
                 
-                const result = await response.json();
-                if (result.success) {
-                    showNotification('URL updated! Restarting browser...', 'success');
-                    setTimeout(() => restartBrowser(ip), 1000);
+                const data = await response.json();
+                if (data.success) {
+                    alert('URL updated successfully!');
+                    await updatePiStatus(ip);
                 } else {
-                    showNotification('Failed to update URL: ' + result.error, 'error');
+                    alert('Failed to update URL: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
+                alert('Error updating URL: ' + error.message);
             }
         }
 
+        async function previewUrl(ip) {
+            const urlInput = document.getElementById(`url-${ip.replace(/\./g, '-')}`);
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('Please enter a URL first');
+                return;
+            }
+            
+            const piName = pis.find(p => p.ip === ip)?.name || ip;
+            document.getElementById('previewTitle').textContent = `Preview: ${piName}`;
+            document.getElementById('previewFrame').src = url;
+            document.getElementById('previewModal').style.display = 'block';
+        }
+
         async function restartBrowser(ip) {
+            if (!confirm('Restart browser on this Pi?')) return;
+            
             try {
-                const response = await fetch(`/api/command/${ip}/restart-browser`, {
+                const response = await fetch(`/api/pis/${ip}/restart-browser`, {
                     method: 'POST'
                 });
-                
-                const result = await response.json();
-                showNotification(result.message || 'Browser restarted', 'success');
-                setTimeout(refreshStatus, 2000);
+                const data = await response.json();
+                alert(data.message || 'Browser restart command sent');
             } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
+                alert('Error restarting browser: ' + error.message);
             }
         }
 
         async function rebootPi(ip) {
-            if (!confirm('Are you sure you want to reboot this Pi?')) return;
+            if (!confirm('⚠️ Reboot this entire Pi? This will take about 30-60 seconds.')) return;
             
             try {
-                const response = await fetch(`/api/command/${ip}/reboot`, {
+                const response = await fetch(`/api/pis/${ip}/reboot`, {
                     method: 'POST'
                 });
-                
-                const result = await response.json();
-                showNotification('Pi is rebooting...', 'success');
-                setTimeout(refreshStatus, 5000);
+                const data = await response.json();
+                alert(data.message || 'Reboot command sent');
+                setTimeout(() => updatePiStatus(ip), 5000);
             } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
+                alert('Error rebooting Pi: ' + error.message);
             }
         }
 
-        async function addPi() {
-            const ip = document.getElementById('piIp').value;
-            const name = document.getElementById('piName').value;
+        function showBulkActions() {
+            const modal = document.getElementById('bulkModal');
+            const list = document.getElementById('bulkPiList');
             
-            if (!ip) {
-                showNotification('Please enter an IP address', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/pis', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ip, name: name || `Pi ${ip}`})
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showNotification('Pi added successfully!', 'success');
-                    document.getElementById('piIp').value = '';
-                    document.getElementById('piName').value = '';
-                    toggleAddForm();
-                    loadPis();
-                } else {
-                    showNotification('Failed to add Pi: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
-            }
-        }
-
-        async function removePi(ip) {
-            if (!confirm('Remove this Pi from the dashboard?')) return;
+            list.innerHTML = `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    <label for="selectAll"><strong>Select All</strong></label>
+                </div>
+                ${pis.map(pi => `
+                    <div class="checkbox-item">
+                        <input type="checkbox" class="pi-checkbox" value="${pi.ip}" id="check-${pi.ip.replace(/\./g, '-')}">
+                        <label for="check-${pi.ip.replace(/\./g, '-')}">${pi.name} (${pi.ip})</label>
+                    </div>
+                `).join('')}
+            `;
             
-            try {
-                const response = await fetch(`/api/pis/${ip}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                showNotification('Pi removed', 'success');
-                loadPis();
-            } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
-            }
-        }
-
-        async function editPiName(ip, currentName) {
-            const newName = prompt('Enter new name for this Pi:', currentName);
-            if (!newName || newName === currentName) return;
-            
-            try {
-                const response = await fetch(`/api/pis/${ip}/name`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name: newName})
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showNotification('Name updated!', 'success');
-                    refreshStatus();
-                } else {
-                    showNotification('Failed to update name: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
-            }
-        }
-
-        function toggleAddForm() {
-            const form = document.getElementById('addPiForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function toggleBulkMode() {
-            bulkMode = !bulkMode;
-            const bulkControls = document.getElementById('bulkControls');
-            const btn = document.getElementById('bulkModeBtn');
-            
-            if (bulkMode) {
-                bulkControls.classList.add('active');
-                btn.textContent = '❌ Exit Bulk Mode';
-            } else {
-                bulkControls.classList.remove('active');
-                btn.textContent = '📋 Bulk Actions';
-                selectedPis.clear();
-            }
-            
-            refreshStatus();
-        }
-
-        function togglePiSelection(ip) {
-            if (selectedPis.has(ip)) {
-                selectedPis.delete(ip);
-            } else {
-                selectedPis.add(ip);
-            }
-            updateSelectedCount();
+            modal.style.display = 'block';
         }
 
         function toggleSelectAll() {
-            const selectAll = document.getElementById('selectAll').checked;
-            selectedPis.clear();
-            
-            if (selectAll) {
-                pis.forEach(pi => selectedPis.add(pi.ip));
-            }
-            
-            refreshStatus();
-            updateSelectedCount();
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.pi-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
         }
 
-        function updateSelectedCount() {
-            document.getElementById('selectedCount').textContent = 
-                `${selectedPis.size} Pi(s) selected`;
+        function getSelectedPis() {
+            return Array.from(document.querySelectorAll('.pi-checkbox:checked')).map(cb => cb.value);
         }
 
         async function bulkChangeUrl() {
-            const url = document.getElementById('bulkUrlInput').value;
+            const selectedIps = getSelectedPis();
+            const url = document.getElementById('bulkUrl').value.trim();
+            
+            if (selectedIps.length === 0) {
+                alert('Please select at least one Pi');
+                return;
+            }
             
             if (!url) {
-                showNotification('Please enter a URL', 'error');
+                alert('Please enter a URL');
                 return;
             }
             
-            if (selectedPis.size === 0) {
-                showNotification('Please select at least one Pi', 'error');
-                return;
-            }
-
+            if (!confirm(`Change URL to "${url}" on ${selectedIps.length} Pi(s)?`)) return;
+            
             try {
-                const response = await fetch('/api/command/bulk/url', {
+                const response = await fetch('/api/bulk/url', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        ips: Array.from(selectedPis),
-                        url: url
-                    })
+                    body: JSON.stringify({ips: selectedIps, url})
                 });
                 
-                const results = await response.json();
-                const successful = results.filter(r => r.success).length;
-                showNotification(`URL updated on ${successful}/${results.length} Pis. Restarting browsers...`, 'success');
-                
-                setTimeout(() => bulkRestartBrowser(), 1000);
+                const data = await response.json();
+                const successful = data.results.filter(r => r.success).length;
+                alert(`Updated ${successful} of ${selectedIps.length} Pi(s)`);
+                closeModal('bulkModal');
+                await updateAllStatuses();
             } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
+                alert('Error in bulk update: ' + error.message);
             }
         }
 
         async function bulkRestartBrowser() {
-            if (selectedPis.size === 0) {
-                showNotification('Please select at least one Pi', 'error');
+            const selectedIps = getSelectedPis();
+            
+            if (selectedIps.length === 0) {
+                alert('Please select at least one Pi');
                 return;
             }
-
+            
+            if (!confirm(`Restart browsers on ${selectedIps.length} Pi(s)?`)) return;
+            
             try {
-                const response = await fetch('/api/command/bulk/restart-browser', {
+                const response = await fetch('/api/bulk/restart-browser', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ips: Array.from(selectedPis)})
+                    body: JSON.stringify({ips: selectedIps})
                 });
                 
-                const results = await response.json();
-                const successful = results.filter(r => r.success).length;
-                showNotification(`Browsers restarted on ${successful}/${results.length} Pis`, 'success');
-                
-                setTimeout(refreshStatus, 2000);
+                const data = await response.json();
+                const successful = data.results.filter(r => r.success).length;
+                alert(`Restarted ${successful} of ${selectedIps.length} browser(s)`);
+                closeModal('bulkModal');
             } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
+                alert('Error in bulk restart: ' + error.message);
             }
         }
 
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+        function refreshAll() {
+            updateAllStatuses();
         }
 
-        // Initialize
-        loadPis();
-        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                if (event.target.id === 'previewModal') {
+                    document.getElementById('previewFrame').src = 'about:blank';
+                }
+            }
+        }
+
         // Auto-refresh every 30 seconds
-        setInterval(refreshStatus, 30000);
+        setInterval(updateAllStatuses, 30000);
+
+        // Load on page load
+        loadPis();
     </script>
 </body>
 </html>
