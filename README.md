@@ -33,7 +33,7 @@ On your main computer (or one designated Pi):
 
 ```bash
 # Clone this repository
-git clone https://github.com/YOUR_USERNAME/pi-dashboard.git
+git clone https://github.com/heinish/pi-dashboard.git
 cd pi-dashboard
 
 # Install Python dependencies
