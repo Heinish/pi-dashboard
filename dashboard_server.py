@@ -119,6 +119,20 @@ def reboot_pi(ip):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/pis/<ip>/execute', methods=['POST'])
+def execute_command(ip):
+    """Execute a command on a specific Pi"""
+    data = request.get_json()
+    try:
+        response = requests.post(
+            f'http://{ip}:5000/execute',
+            json={'command': data['command']},
+            timeout=30
+        )
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/bulk/url', methods=['POST'])
 def bulk_change_url():
     """Change URL on multiple Pis"""

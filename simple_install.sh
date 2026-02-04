@@ -1,4 +1,5 @@
 #!/bin/bash
+# Super Simple Pi Agent Installer - Copy and paste this entire script!
 
 echo "Installing Pi Dashboard Agent..."
 
@@ -57,16 +58,7 @@ def change_url():
         # Simply overwrite the entire file with just the new URL
         with open(config_path, 'w') as f:
             f.write(f'{new_url}\n')
-        
-        # Restart the browser to load the new URL
-        browser_result = run_command("pkill chromium")
-        
-        return jsonify({
-            'success': True, 
-            'message': f'URL updated to {new_url} and browser restarted', 
-            'new_url': new_url,
-            'browser_restarted': browser_result['success']
-        })
+        return jsonify({'success': True, 'message': f'URL updated to {new_url}', 'new_url': new_url})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -79,6 +71,34 @@ def restart_browser():
 def reboot():
     subprocess.Popen(['sudo reboot'])
     return jsonify({'success': True, 'message': 'Pi is rebooting...'})
+
+@app.route('/execute', methods=['POST'])
+def execute_command():
+    """Execute a shell command and return the output"""
+    data = request.json
+    cmd = data.get('command', '')
+    
+    if not cmd:
+        return jsonify({'success': False, 'error': 'No command provided'}), 400
+    
+    try:
+        result = subprocess.run(
+            cmd, 
+            shell=True, 
+            capture_output=True, 
+            text=True, 
+            timeout=30
+        )
+        return jsonify({
+            'success': True,
+            'stdout': result.stdout,
+            'stderr': result.stderr,
+            'returncode': result.returncode
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({'success': False, 'error': 'Command timed out after 30 seconds'}), 408
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
