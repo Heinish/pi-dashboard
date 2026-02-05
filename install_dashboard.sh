@@ -1,253 +1,129 @@
-#!/usr/bin/env python3
-from flask import Flask, render_template, request, jsonify
-import requests
-import json
-import os
-from datetime import datetime
+#!/bin/bash
+# Raspberry Pi Dashboard Auto-Installer
+# This script installs the dashboard and sets it up to auto-start on boot
 
-app = Flask(__name__)
+set -e  # Exit on any error
 
-# Version info
-DASHBOARD_VERSION = "1.0.0"
-EXPECTED_AGENT_VERSION = "1.0.0"
+echo "🍓 Raspberry Pi Dashboard Auto-Installer"
+echo "=========================================="
+echo ""
 
-# File to store Pi configurations
-CONFIG_FILE = 'pis_config.json'
+# Get the current user and home directory
+CURRENT_USER=$(whoami)
+HOME_DIR="${HOME:-$(eval echo ~$CURRENT_USER)}"
+INSTALL_DIR="$HOME_DIR/pi-dashboard"
 
-def load_pis():
-    """Load Pi configurations from file"""
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
-    return []
+# Verify home directory exists
+if [ ! -d "$HOME_DIR" ]; then
+    echo "❌ Error: Home directory $HOME_DIR does not exist!"
+    exit 1
+fi
 
-def save_pis(pis):
-    """Save Pi configurations to file"""
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(pis, f, indent=2)
+echo "📍 Installation directory: $INSTALL_DIR"
+echo "👤 Running as user: $CURRENT_USER"
+echo "🏠 Home directory: $HOME_DIR"
+echo ""
 
-def get_pi_status(ip):
-    """Get status information from a Pi"""
-    status = {
-        'online': False,
-        'uptime': 'N/A',
-        'cpu': 'N/A',
-        'memory': 'N/A',
-        'temperature': 'N/A',
-        'current_url': 'Unknown',
-        'version': 'Unknown',
-        'last_modified': 'Unknown',
-        'needs_update': False
-    }
-    
-    try:
-        # Check if Pi is online
-        health_response = requests.get(f'http://{ip}:5000/health', timeout=2)
-        if health_response.status_code == 200:
-            status['online'] = True
-            
-            # Get version info
-            try:
-                version_response = requests.get(f'http://{ip}:5000/version', timeout=2)
-                if version_response.status_code == 200:
-                    version_data = version_response.json()
-                    status['version'] = version_data.get('version', 'Unknown')
-                    status['last_modified'] = version_data.get('last_modified', 'Unknown')
-                    status['needs_update'] = status['version'] != EXPECTED_AGENT_VERSION
-            except:
-                pass
-            
-            # Get detailed status
-            try:
-                status_response = requests.get(f'http://{ip}:5000/status', timeout=2)
-                if status_response.status_code == 200:
-                    data = status_response.json()
-                    status['uptime'] = data.get('uptime', 'N/A')
-                    status['cpu'] = data.get('cpu', 'N/A')
-                    status['memory'] = data.get('memory', 'N/A')
-                    status['temperature'] = data.get('temperature', 'N/A')
-                    status['current_url'] = data.get('current_url', 'Unknown')
-            except:
-                pass
-    except:
-        pass
-    
-    return status
+# Check if already installed
+if [ -d "$INSTALL_DIR" ]; then
+    echo "⚠️  Dashboard directory already exists at $INSTALL_DIR"
+    read -p "Do you want to remove it and reinstall? (y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "🗑️  Removing old installation..."
+        rm -rf "$INSTALL_DIR"
+    else
+        echo "❌ Installation cancelled."
+        exit 1
+    fi
+fi
 
-@app.route('/')
-def index():
-    """Main dashboard page"""
-    pis = load_pis()
-    
-    # Get status for each Pi
-    for pi in pis:
-        pi_status = get_pi_status(pi['ip'])
-        pi.update(pi_status)
-    
-    return render_template('dashboard.html', 
-                         pis=pis, 
-                         dashboard_version=DASHBOARD_VERSION,
-                         expected_agent_version=EXPECTED_AGENT_VERSION)
+# Check for git
+if ! command -v git &> /dev/null; then
+    echo "❌ Error: git is not installed. Please install it first:"
+    echo "   sudo apt-get update && sudo apt-get install -y git"
+    exit 1
+fi
 
-@app.route('/api/add_pi', methods=['POST'])
-def add_pi():
-    """Add a new Pi to the dashboard"""
-    data = request.get_json()
-    ip = data.get('ip')
-    name = data.get('name')
-    
-    if not ip or not name:
-        return jsonify({'error': 'IP and name are required'}), 400
-    
-    pis = load_pis()
-    
-    # Check if IP already exists
-    if any(pi['ip'] == ip for pi in pis):
-        return jsonify({'error': 'Pi with this IP already exists'}), 400
-    
-    pis.append({'ip': ip, 'name': name})
-    save_pis(pis)
-    
-    return jsonify({'status': 'success', 'message': f'Added {name}'})
+# Clone the repository
+echo "📥 Cloning repository..."
+cd "$HOME_DIR"
+if ! git clone https://github.com/Heinish/pi-dashboard.git; then
+    echo "❌ Error: Failed to clone repository. Please check your internet connection."
+    exit 1
+fi
 
-@app.route('/api/remove_pi', methods=['POST'])
-def remove_pi():
-    """Remove a Pi from the dashboard"""
-    data = request.get_json()
-    ip = data.get('ip')
-    
-    pis = load_pis()
-    pis = [pi for pi in pis if pi['ip'] != ip]
-    save_pis(pis)
-    
-    return jsonify({'status': 'success'})
+# Install Python dependencies
+echo "📦 Installing Python dependencies..."
+if ! pip3 install flask requests --break-system-packages 2>/dev/null; then
+    if ! pip3 install flask requests; then
+        echo "❌ Error: Failed to install Python dependencies."
+        exit 1
+    fi
+fi
 
-@app.route('/api/update_name', methods=['POST'])
-def update_name():
-    """Update a Pi's name"""
-    data = request.get_json()
-    ip = data.get('ip')
-    new_name = data.get('name')
-    
-    pis = load_pis()
-    for pi in pis:
-        if pi['ip'] == ip:
-            pi['name'] = new_name
-            break
-    save_pis(pis)
-    
-    return jsonify({'status': 'success'})
+# Create the systemd service file
+echo "⚙️  Creating systemd service..."
+sudo tee /etc/systemd/system/pi-dashboard.service > /dev/null << EOF
+[Unit]
+Description=Raspberry Pi Dashboard Server
+After=network.target
 
-@app.route('/api/set_url', methods=['POST'])
-def set_url():
-    """Set URL on a Pi"""
-    data = request.get_json()
-    ip = data.get('ip')
-    url = data.get('url')
-    
-    try:
-        response = requests.post(
-            f'http://{ip}:5000/url',
-            json={'url': url},
-            timeout=5
-        )
-        return jsonify(response.json()), response.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+[Service]
+Type=simple
+User=$CURRENT_USER
+WorkingDirectory=$INSTALL_DIR
+ExecStart=/usr/bin/python3 $INSTALL_DIR/dashboard_server.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
-@app.route('/api/restart_browser', methods=['POST'])
-def restart_browser():
-    """Restart browser on a Pi"""
-    data = request.get_json()
-    ip = data.get('ip')
-    
-    try:
-        response = requests.post(f'http://{ip}:5000/restart-browser', timeout=5)
-        return jsonify(response.json()), response.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+[Install]
+WantedBy=multi-user.target
+EOF
 
-@app.route('/api/reboot', methods=['POST'])
-def reboot():
-    """Reboot a Pi"""
-    data = request.get_json()
-    ip = data.get('ip')
-    
-    try:
-        response = requests.post(f'http://{ip}:5000/reboot', timeout=5)
-        return jsonify(response.json()), response.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# Reload systemd, enable and start the service
+echo "🚀 Enabling and starting service..."
+sudo systemctl daemon-reload
+sudo systemctl enable pi-dashboard
+sudo systemctl start pi-dashboard
 
-@app.route('/api/update_agent', methods=['POST'])
-def update_agent():
-    """Update the agent on a Pi"""
-    data = request.get_json()
-    ip = data.get('ip')
-    
-    try:
-        response = requests.post(f'http://{ip}:5000/update', timeout=5)
-        return jsonify(response.json()), response.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# Wait a moment for the service to start
+sleep 3
 
-@app.route('/api/bulk_set_url', methods=['POST'])
-def bulk_set_url():
-    """Set URL on multiple Pis"""
-    data = request.get_json()
-    ips = data.get('ips', [])
-    url = data.get('url')
+# Check if service is running
+if sudo systemctl is-active --quiet pi-dashboard; then
+    echo ""
+    echo "✅ SUCCESS! Dashboard installed and running!"
+    echo ""
+    echo "📊 Dashboard is accessible at:"
+    echo "   - http://localhost:8080"
     
-    results = []
-    for ip in ips:
-        try:
-            response = requests.post(
-                f'http://{ip}:5000/url',
-                json={'url': url},
-                timeout=5
-            )
-            results.append({'ip': ip, 'status': 'success'})
-        except Exception as e:
-            results.append({'ip': ip, 'status': 'error', 'error': str(e)})
+    # Try to get IP address
+    if command -v hostname &> /dev/null; then
+        IP_ADDR=$(hostname -I 2>/dev/null | awk '{print $1}')
+        if [ -n "$IP_ADDR" ]; then
+            echo "   - http://$IP_ADDR:8080"
+        fi
+    fi
     
-    return jsonify({'results': results})
-
-@app.route('/api/bulk_restart_browser', methods=['POST'])
-def bulk_restart_browser():
-    """Restart browser on multiple Pis"""
-    data = request.get_json()
-    ips = data.get('ips', [])
-    
-    results = []
-    for ip in ips:
-        try:
-            response = requests.post(f'http://{ip}:5000/restart-browser', timeout=5)
-            results.append({'ip': ip, 'status': 'success'})
-        except Exception as e:
-            results.append({'ip': ip, 'status': 'error', 'error': str(e)})
-    
-    return jsonify({'results': results})
-
-@app.route('/api/bulk_update', methods=['POST'])
-def bulk_update():
-    """Update agents on multiple Pis"""
-    data = request.get_json()
-    ips = data.get('ips', [])
-    
-    results = []
-    for ip in ips:
-        try:
-            response = requests.post(f'http://{ip}:5000/update', timeout=5)
-            results.append({'ip': ip, 'status': 'success'})
-        except Exception as e:
-            results.append({'ip': ip, 'status': 'error', 'error': str(e)})
-    
-    return jsonify({'results': results})
-
-if __name__ == '__main__':
-    print("🍓 Raspberry Pi Dashboard Server")
-    print(f"Version: {DASHBOARD_VERSION}")
-    print(f"Expected Agent Version: {EXPECTED_AGENT_VERSION}")
-    print("\nStarting server on http://localhost:8080")
-    print("Press Ctrl+C to stop\n")
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    echo ""
+    echo "🔧 Useful commands:"
+    echo "   - Check status:  sudo systemctl status pi-dashboard"
+    echo "   - View logs:     sudo journalctl -u pi-dashboard -f"
+    echo "   - Restart:       sudo systemctl restart pi-dashboard"
+    echo "   - Stop:          sudo systemctl stop pi-dashboard"
+    echo "   - Disable:       sudo systemctl disable pi-dashboard"
+    echo ""
+    echo "🎉 The dashboard will automatically start on boot!"
+    echo ""
+else
+    echo ""
+    echo "⚠️  Service may have issues. Checking logs..."
+    echo ""
+    sudo journalctl -u pi-dashboard -n 20 --no-pager
+    echo ""
+    echo "💡 Try checking the full logs with:"
+    echo "   sudo journalctl -u pi-dashboard -f"
+fi
