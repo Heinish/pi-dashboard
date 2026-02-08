@@ -22,7 +22,7 @@ import psutil
 from datetime import datetime
 
 # Version tracking
-AGENT_VERSION = "1.0.1"
+AGENT_VERSION = "1.0.2"
 
 app = Flask(__name__)
 
