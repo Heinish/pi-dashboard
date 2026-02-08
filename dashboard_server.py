@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # Version info
 DASHBOARD_VERSION = "1.0.0"
-EXPECTED_AGENT_VERSION = "1.0.1"
+EXPECTED_AGENT_VERSION = "1.0.2"
 
 # File to store Pi configurations
 CONFIG_FILE = 'pis_config.json'
