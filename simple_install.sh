@@ -22,7 +22,7 @@ import psutil
 from datetime import datetime
 
 # Version tracking
-AGENT_VERSION = "1.0.2"
+AGENT_VERSION = "1.0.3"
 
 app = Flask(__name__)
 
@@ -71,16 +71,17 @@ def status():
             temp = 'N/A'
         
         # Get current URL from FullPageOS config
-current_url = 'Unknown'
-config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
-for config_path in config_paths:
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, 'r') as f:
-                current_url = f.read().strip()
+        current_url = 'Unknown'
+        config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r') as f:
+                        current_url = f.read().strip()
+                        break
+                except:
+                    pass
                 break
-        except:
-            pass
         
         return jsonify({
             'status': 'online',
@@ -198,7 +199,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=${USER}
 WorkingDirectory=/home/${USER}/pi-agent
 ExecStart=/usr/bin/python3 /home/${USER}/pi-agent/agent.py
 Restart=always
