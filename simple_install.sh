@@ -72,7 +72,7 @@ def status():
         
         # Get current URL from FullPageOS config
         current_url = 'Unknown'
-        config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
+        config_paths = ['/boot/firmware/fullpageos.txt']
         for config_path in config_paths:
             if os.path.exists(config_path):
                 try:
