@@ -71,16 +71,17 @@ def status():
             temp = 'N/A'
         
         # Get current URL from FullPageOS config
-        current_url = 'Unknown'
-        config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
-        for config_path in config_paths:
-            if os.path.exists(config_path):
-                try:
-                    with open(config_path, 'r') as f:
-                        for line in f:
-                            if line.startswith('fullpageos_url='):
-                                current_url = line.split('=', 1)[1].strip().strip('"')
-                                break
+current_url = 'Unknown'
+config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
+for config_path in config_paths:
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r') as f:
+                current_url = f.read().strip()
+                break
+        except:
+            pass
+        break
                 except:
                     pass
                 break
