@@ -1,28 +1,14 @@
 #!/bin/bash
 
-echo "🍓 Installing Pi Dashboard Agent..."
+echo "Installing Pi Dashboard Agent..."
 
-# Install dependencies
-echo "📦 Installing Flask..."
-sudo apt-get update -qq
-sudo apt-get install -y python3-flask python3-pip python3-psutil -qq
-
-# Create agent directory
-mkdir -p /home/$USER/pi-agent
-cd /home/$USER/pi-agent
-
-# Download or create the agent script
-echo "📝 Creating agent script..."
-cat > agent.py << 'EOL'
+# Create directory and agent script
+mkdir -p ~/pi-agent
+cat > ~/pi-agent/pi_agent.py << 'EOF'
 #!/usr/bin/env python3
-from flask import Flask, jsonify, request
-import subprocess
-import os
-import psutil
+from flask import Flask, request, jsonify
+import subprocess, os, socket
 from datetime import datetime
-
-# Version tracking
-AGENT_VERSION = "1.0.3"
 
 app = Flask(__name__)
 
@@ -47,185 +33,110 @@ def get_version():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/status', methods=['GET'])
-def status():
-    """Get Pi status information"""
+def get_config_path():
+    for path in ["/boot/fullpageos.txt", "/boot/firmware/fullpageos.txt"]:
+        if os.path.exists(path): return path
+    return None
+
+def run_command(cmd):
     try:
-        # Get uptime
-        uptime_seconds = int(psutil.boot_time())
-        current_time = int(datetime.now().timestamp())
-        uptime_delta = current_time - uptime_seconds
-        days = uptime_delta // 86400
-        hours = (uptime_delta % 86400) // 3600
-        uptime_str = f"{days}d {hours}h"
-        
-        # Get CPU and memory
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        
-        # Get temperature (Raspberry Pi specific)
-        try:
-            temp_output = subprocess.check_output(['vcgencmd', 'measure_temp']).decode()
-            temp = temp_output.replace('temp=', '').replace("'C\n", '')
-        except:
-            temp = 'N/A'
-        
-        # Get current URL from FullPageOS config
-        current_url = 'Unknown'
-        config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
-        for config_path in config_paths:
-            if os.path.exists(config_path):
-                try:
-                    with open(config_path, 'r') as f:
-                        current_url = f.read().strip()
-                        break
-                except:
-                    pass
-        
-        return jsonify({
-            'status': 'online',
-            'uptime': uptime_str,
-            'cpu': f"{cpu_percent}%",
-            'memory': f"{memory.percent}%",
-            'temperature': temp,
-            'current_url': current_url,
-            'version': AGENT_VERSION
-        })
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+        return {'success': True, 'output': result.stdout.strip(), 'error': result.stderr.strip()}
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return {'success': False, 'error': str(e)}
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'timestamp': datetime.now().isoformat()})
+
+@app.route('/status')
+def status():
+    config_path = get_config_path()
+    current_url = "Unknown"
+    if config_path:
+        try:
+            with open(config_path, 'r') as f:
+                current_url = f.readline().strip()
+        except: pass
+    return jsonify({
+        'hostname': socket.gethostname(),
+        'uptime': run_command("uptime -p").get('output', 'Unknown'),
+        'current_url': current_url,
+        'memory': run_command("free -h | grep Mem | awk '{print $3\"/\"$2}'").get('output', 'Unknown'),
+        'temperature': run_command("vcgencmd measure_temp | cut -d= -f2").get('output', 'Unknown'),
+        'cpu_usage': run_command("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1").get('output', 'Unknown'),
+        'timestamp': datetime.now().isoformat(),
+        
+    })
 
 @app.route('/url', methods=['POST'])
-def set_url():
-    """Change the URL displayed on the Pi"""
+def change_url():
+    new_url = request.get_json().get('url')
+    if not new_url: return jsonify({'success': False, 'error': 'No URL'}), 400
+    config_path = get_config_path()
+    if not config_path: return jsonify({'success': False, 'error': 'Config not found'}), 500
     try:
-        data = request.get_json()
-        new_url = data.get('url')
+        # Simply overwrite the entire file with just the new URL
+        with open(config_path, 'w') as f:
+            f.write(f'{new_url}\n')
         
-        if not new_url:
-            return jsonify({'error': 'No URL provided'}), 400
-        
-        # Find and update FullPageOS config
-        config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
-        config_updated = False
-        
-        for config_path in config_paths:
-            if os.path.exists(config_path):
-                try:
-                    # Simply write the URL to the file
-                    with open(config_path, 'w') as f:
-                        f.write(new_url + '\n')
-                    
-                    config_updated = True
-                    break
-                except PermissionError:
-                    return jsonify({'error': 'Permission denied. Run: sudo chmod 666 ' + config_path}), 500
-                except Exception as e:
-                    return jsonify({'error': str(e)}), 500
-        
-        if not config_updated:
-            return jsonify({'error': 'FullPageOS config file not found'}), 404
-        
-        # Restart the browser to apply changes
-        try:
-            subprocess.run(['sudo', 'systemctl', 'restart', 'fullpageos'], check=False)
-        except:
-            pass
+        # Restart the browser to load the new URL
+        browser_result = run_command("pkill chromium")
         
         return jsonify({
-            'status': 'success',
-            'message': f'URL updated to {new_url}',
-            'new_url': new_url
+            'success': True, 
+            'message': f'URL updated to {new_url} and browser restarted', 
+            'new_url': new_url,
+            'browser_restarted': browser_result['success']
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/restart-browser', methods=['POST'])
 def restart_browser():
-    """Restart the Chromium browser"""
-    try:
-        subprocess.run(['pkill', 'chromium'], shell=False)
-        return jsonify({'status': 'success', 'message': 'Browser restarted'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    result = run_command("pkill chromium")
+    return jsonify({'success': result['success'], 'message': 'Browser restarted' if result['success'] else result.get('error')})
 
 @app.route('/reboot', methods=['POST'])
 def reboot():
-    """Reboot the Pi"""
-    try:
-        subprocess.Popen(['sudo', 'reboot'])
-        return jsonify({'status': 'success', 'message': 'Rebooting...'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/update', methods=['POST'])
-def update_agent():
-    """Update the agent by re-running the install script"""
-    try:
-        # Run the install script
-        install_cmd = 'curl -sSL https://raw.githubusercontent.com/Heinish/pi-dashboard/main/simple_install.sh | bash'
-        subprocess.Popen(install_cmd, shell=True)
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'Update started. Agent will restart in a few seconds.'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    subprocess.Popen(['sudo reboot'])
+    return jsonify({'success': True, 'message': 'Pi is rebooting...'})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
-EOL
+EOF
 
-chmod +x agent.py
+chmod +x ~/pi-agent/pi_agent.py
 
-# Fix permissions for FullPageOS config
-echo "🔓 Setting up config file permissions..."
-for config_path in /boot/fullpageos.txt /boot/firmware/fullpageos.txt; do
-    if [ -f "$config_path" ]; then
-        echo "Found config at $config_path"
-        sudo chmod 666 "$config_path"
-        echo "✅ Permissions updated for $config_path"
-        break
-    fi
-done
+# Install Flask
+pip3 install flask --break-system-packages 2>/dev/null || pip3 install flask
 
-# Create systemd service with actual username (not $USER variable)
-echo "⚙️  Creating systemd service..."
+# Create service
 sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
 [Unit]
-Description=Pi Dashboard Agent
+Description=Raspberry Pi Dashboard Agent
 After=network.target
-
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/${USER}/pi-agent
-ExecStart=/usr/bin/python3 /home/${USER}/pi-agent/agent.py
+WorkingDirectory=$HOME/pi-agent
+ExecStart=/usr/bin/python3 $HOME/pi-agent/pi_agent.py
 Restart=always
 RestartSec=10
-
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Enable and start service
-echo "🚀 Starting service..."
+# Start service
 sudo systemctl daemon-reload
 sudo systemctl enable pi-agent
-sudo systemctl restart pi-agent
-
-# Wait a moment and check status
+sudo systemctl start pi-agent
 sleep 2
+
+# Check status
 if sudo systemctl is-active --quiet pi-agent; then
-    echo "✅ Installation complete!"
-    echo ""
-    echo "Agent is running on port 5000"
-    echo "Check status: sudo systemctl status pi-agent"
-    echo "View logs: sudo journalctl -u pi-agent -f"
-    echo ""
-    echo "Add this Pi to your dashboard:"
-    echo "IP: $(hostname -I | awk '{print $1}')"
+    echo "✅ SUCCESS! Agent is running on port 5000"
+    echo "Test it: curl http://localhost:5000/health"
 else
-    echo "❌ Service failed to start. Check logs:"
-    sudo journalctl -u pi-agent -n 20
+    echo "⚠️ Check status: sudo systemctl status pi-agent"
 fi
