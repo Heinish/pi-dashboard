@@ -98,57 +98,18 @@ def status():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/url', methods=['POST'])
-def set_url():
-    """Change the URL displayed on the Pi"""
+def change_url():
+    new_url = request.get_json().get('url')
+    if not new_url: return jsonify({'success': False, 'error': 'No URL'}), 400
+    config_path = get_config_path()
+    if not config_path: return jsonify({'success': False, 'error': 'Config not found'}), 500
     try:
-        data = request.get_json()
-        new_url = data.get('url')
-        
-        if not new_url:
-            return jsonify({'error': 'No URL provided'}), 400
-        
-        # Find and update FullPageOS config
-        config_paths = ['/boot/firmware/fullpageos.txt']
-        config_updated = False
-        
-        for config_path in config_paths:
-            if os.path.exists(config_path):
-                try:
-                    # Read current config
-                    with open(config_path, 'r') as f:
-                        lines = f.readlines()
-                    
-                    # Update URL line
-                    with open(config_path, 'w') as f:
-                        for line in lines:
-                            if line.startswith('fullpageos_url='):
-                                f.write(f'fullpageos_url="{new_url}"\n')
-                            else:
-                                f.write(line)
-                    
-                    config_updated = True
-                    break
-                except PermissionError:
-                    return jsonify({'error': 'Permission denied. Run: sudo chmod 666 ' + config_path}), 500
-                except Exception as e:
-                    return jsonify({'error': str(e)}), 500
-        
-        if not config_updated:
-            return jsonify({'error': 'FullPageOS config file not found'}), 404
-        
-        # Restart the browser to apply changes
-        try:
-            subprocess.run(['sudo', 'systemctl', 'restart', 'fullpageos'], check=False)
-        except:
-            pass
-        
-        return jsonify({
-            'status': 'success',
-            'message': f'URL updated to {new_url}',
-            'new_url': new_url
-        })
+        # Simply overwrite the entire file with just the new URL
+        with open(config_path, 'w') as f:
+            f.write(f'{new_url}\n')
+        return jsonify({'success': True, 'message': f'URL updated to {new_url}', 'new_url': new_url})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/restart-browser', methods=['POST'])
 def restart_browser():
@@ -199,8 +160,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/$USER/pi-agent
-ExecStart=/usr/bin/python3 /home/$USER/pi-agent/agent.py
+WorkingDirectory=/home/$HOME/pi-agent
+ExecStart=/usr/bin/python3 /home/$HOME/pi-agent/agent.py
 Restart=always
 RestartSec=10
 
