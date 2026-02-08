@@ -154,7 +154,7 @@ def set_url():
 def restart_browser():
     """Restart the Chromium browser"""
     try:
-        subprocess.run(['sudo', 'systemctl', 'restart', 'fullpageos'], check=True)
+        subprocess.run(['pkill chromium'], check=True)
         return jsonify({'status': 'success', 'message': 'Browser restarted'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
