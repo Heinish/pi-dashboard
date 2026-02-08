@@ -171,8 +171,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/$HOME/pi-agent
-ExecStart=/usr/bin/python3 /home/$HOME/pi-agent/agent.py
+WorkingDirectory=/home/$USER/pi-agent
+ExecStart=/usr/bin/python3 /home/$USER/pi-agent/agent.py
 Restart=always
 RestartSec=10
 
