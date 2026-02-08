@@ -81,10 +81,6 @@ for config_path in config_paths:
                 break
         except:
             pass
-        break
-                except:
-                    pass
-                break
         
         return jsonify({
             'status': 'online',
