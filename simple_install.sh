@@ -150,6 +150,17 @@ EOL
 
 chmod +x agent.py
 
+# Fix permissions for FullPageOS config
+echo "🔓 Setting up config file permissions..."
+for config_path in /boot/fullpageos.txt /boot/firmware/fullpageos.txt; do
+    if [ -f "$config_path" ]; then
+        echo "Found config at $config_path"
+        sudo chmod 666 "$config_path"
+        echo "✅ Permissions updated for $config_path"
+        break
+    fi
+done
+
 # Create systemd service
 echo "⚙️  Creating systemd service..."
 sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
