@@ -202,7 +202,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=${USER}
+User=root
 WorkingDirectory=/home/${USER}/pi-agent
 ExecStart=/usr/bin/python3 /home/${USER}/pi-agent/agent.py
 Restart=always
