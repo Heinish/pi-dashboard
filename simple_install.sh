@@ -81,7 +81,6 @@ def status():
                         break
                 except:
                     pass
-                break
         
         return jsonify({
             'status': 'online',
