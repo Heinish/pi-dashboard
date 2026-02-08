@@ -115,17 +115,9 @@ def set_url():
         for config_path in config_paths:
             if os.path.exists(config_path):
                 try:
-                    # Read current config
-                    with open(config_path, 'r') as f:
-                        lines = f.readlines()
-                    
-                    # Update URL line
+                    # Simply write the URL to the file
                     with open(config_path, 'w') as f:
-                        for line in lines:
-                            if line.startswith('fullpageos_url='):
-                                f.write(f'fullpageos_url="{new_url}"\n')
-                            else:
-                                f.write(line)
+                        f.write(new_url + '\n')
                     
                     config_updated = True
                     break
