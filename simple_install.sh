@@ -108,7 +108,7 @@ def set_url():
             return jsonify({'error': 'No URL provided'}), 400
         
         # Find and update FullPageOS config
-        config_paths = ['/boot/fullpageos.txt', '/boot/firmware/fullpageos.txt']
+        config_paths = ['/boot/firmware/fullpageos.txt']
         config_updated = False
         
         for config_path in config_paths:
