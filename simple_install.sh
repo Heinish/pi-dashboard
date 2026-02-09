@@ -1,4 +1,5 @@
 #!/bin/bash
+#Testing av branch
 echo "🍓 Installing Pi Dashboard Agent..."
 
 # Install dependencies
