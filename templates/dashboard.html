@@ -185,6 +185,30 @@
             font-family: 'Courier New', monospace;
         }
 
+        /* New styles for current URL display */
+        .current-url-box {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 3px solid #4299e1;
+        }
+
+        .current-url-label {
+            font-size: 11px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .current-url-value {
+            color: #2d3748;
+            font-size: 13px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
         .url-control {
             margin-bottom: 15px;
         }
@@ -214,143 +238,6 @@
             min-width: 100px;
             font-size: 12px;
             padding: 8px 12px;
-        }
-
-        /* Terminal Styles */
-        .terminal-section {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .terminal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .terminal-title {
-            font-weight: bold;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .terminal-toggle {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-
-        .terminal-toggle:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-        }
-
-        .terminal-input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .terminal-input {
-            flex: 1;
-            padding: 8px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            background: #f7fafc;
-        }
-
-        .terminal-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-
-        .terminal-run-btn {
-            padding: 8px 16px;
-            background: #48bb78;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.3s;
-        }
-
-        .terminal-run-btn:hover {
-            background: #38a169;
-            transform: translateY(-1px);
-        }
-
-        .terminal-output {
-            background: #1a202c;
-            color: #68d391;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.5;
-            display: none;
-        }
-
-        .terminal-output.active {
-            display: block;
-        }
-
-        .terminal-output:empty::before {
-            content: 'No output yet. Enter a command above.';
-            color: #718096;
-            font-style: italic;
-        }
-
-        .terminal-output.error {
-            color: #fc8181;
-        }
-
-        .terminal-prompt {
-            color: #63b3ed;
-        }
-
-        .terminal-hidden {
-            display: none;
-        }
-
-        .quick-commands {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .quick-cmd-btn {
-            padding: 4px 8px;
-            background: #edf2f7;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Courier New', monospace;
-        }
-
-        .quick-cmd-btn:hover {
-            background: #e2e8f0;
-            border-color: #a0aec0;
         }
 
         .modal {
@@ -571,6 +458,12 @@
                             <button class="edit-name-btn" onclick="editPiName('${pi.ip}')" title="Edit name">✏️</button>
                         </div>
                     </div>
+                    
+                    <div class="current-url-box" id="current-url-box-${pi.ip.replace(/\./g, '-')}">
+                        <div class="current-url-label">Current URL</div>
+                        <div class="current-url-value" id="current-url-${pi.ip.replace(/\./g, '-')}">Loading...</div>
+                    </div>
+                    
                     <div class="pi-info" id="info-${pi.ip.replace(/\./g, '-')}">
                         <div class="info-row">
                             <span class="info-label">IP:</span>
@@ -581,6 +474,7 @@
                             <span class="info-value">Checking...</span>
                         </div>
                     </div>
+                    
                     <div class="url-control">
                         <input type="text" 
                                id="url-${pi.ip.replace(/\./g, '-')}" 
@@ -596,116 +490,15 @@
                         <button class="btn-danger" onclick="rebootPi('${pi.ip}')">Reboot</button>
                         <button class="btn-secondary" onclick="removePi('${pi.ip}')">Remove</button>
                     </div>
-                    
-                    <!-- Terminal Section -->
-                    <div class="terminal-section">
-                        <div class="terminal-header">
-                            <span class="terminal-title">💻 Terminal</span>
-                            <button class="terminal-toggle" onclick="toggleTerminal('${pi.ip}')">Show/Hide</button>
-                        </div>
-                        <div id="terminal-content-${pi.ip.replace(/\./g, '-')}" class="terminal-hidden">
-                            <div class="quick-commands">
-                                <button class="quick-cmd-btn" onclick="setQuickCommand('${pi.ip}', 'sudo journalctl --vacuum-size=100M')">Clean Logs</button>
-                                <button class="quick-cmd-btn" onclick="setQuickCommand('${pi.ip}', 'df -h')">Disk Space</button>
-                                <button class="quick-cmd-btn" onclick="setQuickCommand('${pi.ip}', 'free -h')">Memory</button>
-                                <button class="quick-cmd-btn" onclick="setQuickCommand('${pi.ip}', 'uptime')">Uptime</button>
-                                <button class="quick-cmd-btn" onclick="setQuickCommand('${pi.ip}', 'sudo systemctl status pi-agent')">Agent Status</button>
-                            </div>
-                            <div class="terminal-input-group">
-                                <input type="text" 
-                                       class="terminal-input" 
-                                       id="cmd-${pi.ip.replace(/\./g, '-')}" 
-                                       placeholder="Enter command (e.g., ls -la)"
-                                       onkeypress="if(event.key==='Enter') runCommand('${pi.ip}')">
-                                <button class="terminal-run-btn" onclick="runCommand('${pi.ip}')">▶ Run</button>
-                            </div>
-                            <pre class="terminal-output" id="output-${pi.ip.replace(/\./g, '-')}"></pre>
-                        </div>
-                    </div>
                 </div>
             `).join('');
-        }
-
-        function toggleTerminal(ip) {
-            const contentId = `terminal-content-${ip.replace(/\./g, '-')}`;
-            const outputId = `output-${ip.replace(/\./g, '-')}`;
-            const content = document.getElementById(contentId);
-            const output = document.getElementById(outputId);
-            
-            if (content.classList.contains('terminal-hidden')) {
-                content.classList.remove('terminal-hidden');
-                output.classList.add('active');
-            } else {
-                content.classList.add('terminal-hidden');
-                output.classList.remove('active');
-            }
-        }
-
-        function setQuickCommand(ip, cmd) {
-            const inputId = `cmd-${ip.replace(/\./g, '-')}`;
-            document.getElementById(inputId).value = cmd;
-        }
-
-        async function runCommand(ip) {
-            const inputId = `cmd-${ip.replace(/\./g, '-')}`;
-            const outputId = `output-${ip.replace(/\./g, '-')}`;
-            const input = document.getElementById(inputId);
-            const output = document.getElementById(outputId);
-            const cmd = input.value.trim();
-            
-            if (!cmd) {
-                output.textContent = 'Error: No command entered';
-                output.classList.add('error');
-                return;
-            }
-            
-            // Show loading state
-            output.classList.remove('error');
-            output.textContent = `${ip}:~ $ ${cmd}\n\nExecuting...`;
-            output.classList.add('active');
-            
-            try {
-                const response = await fetch(`/api/pis/${ip}/execute`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({command: cmd})
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    let outputText = `${ip}:~ $ ${cmd}\n\n`;
-                    
-                    if (data.stdout) {
-                        outputText += data.stdout;
-                    }
-                    
-                    if (data.stderr) {
-                        outputText += '\n--- Errors/Warnings ---\n' + data.stderr;
-                    }
-                    
-                    if (!data.stdout && !data.stderr) {
-                        outputText += '(Command completed with no output)';
-                    }
-                    
-                    outputText += `\n\n[Exit code: ${data.returncode}]`;
-                    
-                    output.textContent = outputText;
-                    output.classList.remove('error');
-                } else {
-                    output.textContent = `${ip}:~ $ ${cmd}\n\nError: ${data.error}`;
-                    output.classList.add('error');
-                }
-            } catch (error) {
-                output.textContent = `${ip}:~ $ ${cmd}\n\nConnection Error: ${error.message}`;
-                output.classList.add('error');
-            }
         }
 
         async function updatePiStatus(ip) {
             const statusId = `status-${ip.replace(/\./g, '-')}`;
             const infoId = `info-${ip.replace(/\./g, '-')}`;
             const urlInputId = `url-${ip.replace(/\./g, '-')}`;
+            const currentUrlId = `current-url-${ip.replace(/\./g, '-')}`;
             
             try {
                 const response = await fetch(`/api/pis/${ip}/status`);
@@ -714,19 +507,21 @@
                 const statusEl = document.getElementById(statusId);
                 const infoEl = document.getElementById(infoId);
                 const urlInput = document.getElementById(urlInputId);
+                const currentUrlEl = document.getElementById(currentUrlId);
                 
                 if (data.online) {
                     statusEl.className = 'status-indicator status-online';
                     const status = data.status;
                     
+                    // Update current URL display
+                    if (currentUrlEl && status.current_url) {
+                        currentUrlEl.textContent = status.current_url;
+                    }
+                    
                     infoEl.innerHTML = `
                         <div class="info-row">
                             <span class="info-label">IP:</span>
                             <span class="info-value">${ip}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Current URL:</span>
-                            <span class="info-value">${status.current_url || 'Unknown'}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Uptime:</span>
@@ -751,6 +546,9 @@
                     }
                 } else {
                     statusEl.className = 'status-indicator status-offline';
+                    if (currentUrlEl) {
+                        currentUrlEl.textContent = 'Offline';
+                    }
                     infoEl.innerHTML = `
                         <div class="info-row">
                             <span class="info-label">IP:</span>
