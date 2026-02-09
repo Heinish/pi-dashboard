@@ -17,13 +17,6 @@ def get_config_path():
         if os.path.exists(path): return path
     return None
 
-def run_command(cmd):
-    try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-        return {'success': True, 'output': result.stdout.strip(), 'error': result.stderr.strip()}
-    except Exception as e:
-        return {'success': False, 'error': str(e)}
-
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok', 'timestamp': datetime.now().isoformat()})
