@@ -1,3 +1,20 @@
+#!/bin/bash
+
+echo "🍓 Installing Pi Dashboard Agent..."
+
+# Install dependencies
+echo "📦 Installing Flask..."
+sudo apt-get update -qq
+sudo apt-get install -y python3-flask python3-pip -qq
+
+# Create agent directory
+echo "📁 Creating agent directory..."
+mkdir -p /home/$USER/pi-agent
+cd /home/$USER/pi-agent
+
+# Create the agent script
+echo "📝 Creating agent script..."
+cat > pi_agent.py << 'EOL'
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
 import subprocess, os, socket
@@ -80,3 +97,49 @@ def reboot():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
+EOL
+
+chmod +x pi_agent.py
+
+# Create systemd service
+echo "⚙️  Creating systemd service..."
+sudo tee /etc/systemd/system/pi-agent.service > /dev/null << EOF
+[Unit]
+Description=Raspberry Pi Dashboard Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/$USER/pi-agent
+ExecStart=/usr/bin/python3 /home/$USER/pi-agent/pi_agent.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start service
+echo "🚀 Starting service..."
+sudo systemctl daemon-reload
+sudo systemctl enable pi-agent
+sudo systemctl restart pi-agent
+
+# Wait a moment and check status
+sleep 2
+if sudo systemctl is-active --quiet pi-agent; then
+    echo "✅ Installation complete!"
+    echo ""
+    echo "Agent is running on port 5000"
+    echo "Check status: sudo systemctl status pi-agent"
+    echo "View logs: sudo journalctl -u pi-agent -f"
+    echo ""
+    echo "Test it: curl http://localhost:5000/status"
+    echo ""
+    echo "Add this Pi to your dashboard:"
+    echo "IP: $(hostname -I | awk '{print $1}')"
+else
+    echo "❌ Service failed to start. Check logs:"
+    sudo journalctl -u pi-agent -n 20
+fi
