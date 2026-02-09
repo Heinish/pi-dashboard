@@ -2,6 +2,11 @@
 
 echo "Installing Pi Dashboard Agent..."
 
+# Install dependencies
+echo "📦 Installing Flask..."
+sudo apt-get update -qq
+sudo apt-get install -y python3-flask python3-pip python3-psutil -qq
+
 # Create directory and agent script
 mkdir -p ~/pi-agent
 cat > ~/pi-agent/pi_agent.py << 'EOF'
