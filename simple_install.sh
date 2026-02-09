@@ -120,6 +120,8 @@ sleep 2
 if sudo systemctl is-active --quiet pi-agent; then
     echo "✅ SUCCESS! Agent is running on port 5000"
     echo "Test it: curl http://localhost:5000/health"
+    echo "Add this Pi to your dashboard:"
+    echo "IP: $(hostname -I | awk '{print $1}')"
 else
     echo "⚠️ Check status: sudo systemctl status pi-agent"
 fi
