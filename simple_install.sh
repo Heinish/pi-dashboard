@@ -12,27 +12,6 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'ok'})
-
-@app.route('/version', methods=['GET'])
-def get_version():
-    """Return agent version and last modified time"""
-    try:
-        script_path = __file__
-        mod_time = os.path.getmtime(script_path)
-        mod_date = datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S')
-        
-        return jsonify({
-            'version': AGENT_VERSION,
-            'last_modified': mod_date,
-            'timestamp': mod_time,
-            'status': 'ok'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 def get_config_path():
     for path in ["/boot/fullpageos.txt", "/boot/firmware/fullpageos.txt"]:
         if os.path.exists(path): return path
@@ -65,8 +44,7 @@ def status():
         'memory': run_command("free -h | grep Mem | awk '{print $3\"/\"$2}'").get('output', 'Unknown'),
         'temperature': run_command("vcgencmd measure_temp | cut -d= -f2").get('output', 'Unknown'),
         'cpu_usage': run_command("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1").get('output', 'Unknown'),
-        'timestamp': datetime.now().isoformat(),
-        
+        'timestamp': datetime.now().isoformat()
     })
 
 @app.route('/url', methods=['POST'])
